@@ -4,31 +4,22 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/faiface/pixel"
+	"github.com/alacrity-engine/core/geometry"
 )
 
-// GetSpritesheetFrames returns the set of rectangles
-// corresponding to the frames of the spritesheet.
-func GetSpritesheetFrames(spritesheet *pixel.PictureData, width, height int) []pixel.Rect {
-	frames := make([]pixel.Rect, 0)
-	pixelWidth := spritesheet.Bounds().W()
-	pixelHeight := spritesheet.Bounds().H()
-	dw := pixelWidth / float64(width)
-	dh := pixelHeight / float64(height)
-
-	for y := pixelHeight; y > 0; y -= dh {
-		for x := 0.0; x < pixelWidth; x += dw {
-			frame := pixel.R(x, y-dh, x+dw, y)
-			frames = append(frames, frame)
-		}
-	}
-
-	return frames
+// AnimationData contains data
+// about animation frames, their
+// durations and the name of the
+// spritesheet.
+type AnimationData struct {
+	Spritesheet string
+	Frames      []geometry.Rect
+	Durations   []int32
 }
 
 // AnimationDataToBytes converts the animation data
 // to a byte array.
-func AnimationDataToBytes(anim *AnimationData) ([]byte, error) {
+func (anim *AnimationData) ToBytes() ([]byte, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
 	// Write the name of the spritesheet.
@@ -120,7 +111,7 @@ func AnimationDataFromBytes(data []byte) (*AnimationData, error) {
 	}
 
 	// Read AnimationData frames.
-	frames := []pixel.Rect{}
+	frames := []geometry.Rect{}
 
 	for i := int32(0); i < frameCount; i++ {
 		var minX, minY, maxX, maxY float64
@@ -149,7 +140,7 @@ func AnimationDataFromBytes(data []byte) (*AnimationData, error) {
 			return nil, err
 		}
 
-		frame := pixel.R(minX, minY, maxX, maxY)
+		frame := geometry.R(minX, minY, maxX, maxY)
 		frames = append(frames, frame)
 	}
 

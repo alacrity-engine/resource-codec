@@ -1,9 +1,25 @@
 package codec
 
-type PixFormat string
+type PixFormat int
 
 const (
-	PixFormatRGBA PixFormat = "RGBA"
-	PixFormatRGB  PixFormat = "RGB"
-	PixFormatCMYK PixFormat = "CMYK"
+	PixFormatRGBA PixFormat = iota
+	PixFormatRGB
+	PixFormatCMYK
 )
+
+func (pixFormat PixFormat) String() string {
+	switch pixFormat {
+	case PixFormatRGBA:
+		return "RGBA"
+
+	case PixFormatRGB:
+		return "RGB"
+
+	case PixFormatCMYK:
+		return "CMYK"
+
+	default:
+		return ""
+	}
+}

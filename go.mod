@@ -3,10 +3,9 @@ module github.com/alacrity-engine/resource-codec
 go 1.19
 
 require (
+	github.com/alacrity-engine/core v0.0.0-20220924181843-504c756d9b67
 	github.com/ethereum/go-ethereum v1.10.25
-	github.com/faiface/pixel v0.10.0
-	github.com/stretchr/testify v1.7.2
-	gopkg.in/yaml.v2 v2.4.0
+	github.com/stretchr/testify v1.8.0
 )
 
 require (

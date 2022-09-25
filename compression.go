@@ -7,11 +7,15 @@ import (
 )
 
 var (
+	// compression is the map containing all the
+	// available compression functions by their identifiers.
 	compression = map[CompressionAlgorithm]func([]byte) ([]byte, error){
 		CompressionAlgorithmLZWOrderLSBLitWidth8: CompressLZWOrderLSBLitWidth8,
 	}
 )
 
+// Compress compresses the given data using
+// the consented compression function.
 func Compress(in []byte) ([]byte, error) {
 	compressionAlgorithm, ok := compression[CompressionAlgorithmLZWOrderLSBLitWidth8]
 
@@ -24,6 +28,9 @@ func Compress(in []byte) ([]byte, error) {
 	return compressionAlgorithm(in)
 }
 
+// CompressLZWOrderLSBLitWidth8 uses the
+// LZWOrderLSBLitWidth8 compression algorithm
+// to compress the given data.
 func CompressLZWOrderLSBLitWidth8(in []byte) ([]byte, error) {
 	var buffer bytes.Buffer
 	writer := lzw.NewWriter(&buffer, lzw.LSB, 8)

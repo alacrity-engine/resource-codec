@@ -1,16 +1,17 @@
 package codec
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"image"
 	"image/draw"
 	_ "image/jpeg"
 	_ "image/png"
-)
 
-// TODO: add the CBOR serialization
-// to save pictures to .res files.
+	"github.com/alacrity-engine/core/geometry"
+)
 
 type Picture struct {
 	Width         int32
@@ -30,6 +31,25 @@ type CompressedPicture struct {
 	OriginalPixFormat     PixFormat
 	OriginalHashAlgorithm HashAlgorithm
 	CompressionAlgorithm  CompressionAlgorithm
+}
+
+// GetSpritesheetFrames returns the set of rectangles
+// corresponding to the frames of the spritesheet.
+func (spritesheet *Picture) GetSpritesheetFrames(width, height int) []geometry.Rect {
+	frames := make([]geometry.Rect, 0)
+	pixelWidth := float64(spritesheet.Width)
+	pixelHeight := float64(spritesheet.Height)
+	dw := pixelWidth / float64(width)
+	dh := pixelHeight / float64(height)
+
+	for y := pixelHeight; y > 0; y -= dh {
+		for x := 0.0; x < pixelWidth; x += dw {
+			frame := geometry.R(x, y-dh, x+dw, y)
+			frames = append(frames, frame)
+		}
+	}
+
+	return frames
 }
 
 func (picture *Picture) Compress() (*CompressedPicture, error) {
@@ -73,7 +93,7 @@ func (compressedPicture *CompressedPicture) Decompress() (*Picture, error) {
 		return nil, err
 	}
 
-	if !SliceEqual(decompressedHash, compressedPicture.OriginalHash) {
+	if !sliceEqual(decompressedHash, compressedPicture.OriginalHash) {
 		return nil, fmt.Errorf(
 			"data corruption error: expected %s but got %s (%s)",
 			hex.EncodeToString(compressedPicture.OriginalHash),
@@ -91,11 +111,163 @@ func (compressedPicture *CompressedPicture) Decompress() (*Picture, error) {
 	}, nil
 }
 
+func (compressedPicture *CompressedPicture) ToBytes() ([]byte, error) {
+	buffer := bytes.NewBuffer([]byte{})
+
+	err := binary.Write(buffer, binary.BigEndian, compressedPicture.Width)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, compressedPicture.Height)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, compressedPicture.OriginalPixSize)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, int32(len(compressedPicture.CompressedPix)))
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buffer.Write(compressedPicture.CompressedPix)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, int32(len(compressedPicture.OriginalHash)))
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buffer.Write(compressedPicture.OriginalHash)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, int32(compressedPicture.OriginalPixFormat))
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, int32(compressedPicture.OriginalHashAlgorithm))
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, int32(compressedPicture.CompressionAlgorithm))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
+}
+
+func CompressedPictureFromBytes(data []byte) (*CompressedPicture, error) {
+	buffer := bytes.NewBuffer(data)
+	compressedPicture := &CompressedPicture{}
+
+	err := binary.Read(buffer, binary.BigEndian, &compressedPicture.Width)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Read(buffer, binary.BigEndian, &compressedPicture.Height)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Read(buffer, binary.BigEndian, &compressedPicture.OriginalPixSize)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var compressedPixLength int32
+	err = binary.Read(buffer, binary.BigEndian, &compressedPixLength)
+
+	if err != nil {
+		return nil, err
+	}
+
+	compressedPix := make([]byte, compressedPixLength)
+	_, err = buffer.Read(compressedPix)
+
+	if err != nil {
+		return nil, err
+	}
+
+	compressedPicture.CompressedPix = compressedPix
+
+	var originalHashLength int32
+	err = binary.Read(buffer, binary.BigEndian, &originalHashLength)
+
+	if err != nil {
+		return nil, err
+	}
+
+	originalHash := make([]byte, originalHashLength)
+	_, err = buffer.Read(originalHash)
+
+	if err != nil {
+		return nil, err
+	}
+
+	compressedPicture.OriginalHash = originalHash
+
+	var originalPixFormat int32
+	err = binary.Read(buffer, binary.BigEndian, &originalPixFormat)
+
+	if err != nil {
+		return nil, err
+	}
+
+	compressedPicture.OriginalPixFormat = PixFormat(originalPixFormat)
+
+	var originalHashAlgorithm int32
+	err = binary.Read(buffer, binary.BigEndian, &originalHashAlgorithm)
+
+	if err != nil {
+		return nil, err
+	}
+
+	compressedPicture.OriginalHashAlgorithm = HashAlgorithm(originalHashAlgorithm)
+
+	var compressionAlgorithm int32
+	err = binary.Read(buffer, binary.BigEndian, &compressionAlgorithm)
+
+	if err != nil {
+		return nil, err
+	}
+
+	compressedPicture.CompressionAlgorithm = CompressionAlgorithm(compressionAlgorithm)
+
+	return compressedPicture, nil
+}
+
 func NewPictureFromImage(img image.Image) (*Picture, error) {
 	imgRGBA := image.NewRGBA(image.Rect(0, 0,
 		img.Bounds().Dx(), img.Bounds().Dy()))
 	draw.Draw(imgRGBA, imgRGBA.Bounds(),
 		img.Bounds(), img.Bounds().Min, draw.Src)
+	reversePix(imgRGBA.Pix)
+	mirror(imgRGBA)
 
 	hash, err := Hash(imgRGBA.Pix)
 

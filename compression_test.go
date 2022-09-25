@@ -52,3 +52,16 @@ func TestDecompressLZWOrderLSBLitWidth8(t *testing.T) {
 	assert.Nil(t, err)
 	assert.ElementsMatch(t, hashOriginal, hashDecompressed)
 }
+
+func TestCompressPicture(t *testing.T) {
+	img, _, err := image.Decode(bytes.NewReader(TestImage))
+	assert.Nil(t, err)
+	picture, err := codec.NewPictureFromImage(img)
+	assert.Nil(t, err)
+
+	compressedPicture, err := picture.Compress()
+	assert.Nil(t, err)
+	assert.Equal(t, 7155, len(compressedPicture.CompressedPix))
+	assert.Equal(t, codec.HashAlgorithmKeccak256, compressedPicture.OriginalHashAlgorithm)
+	assert.Equal(t, codec.CompressionAlgorithmLZWOrderLSBLitWidth8, compressedPicture.CompressionAlgorithm)
+}
