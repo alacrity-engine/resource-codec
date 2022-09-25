@@ -26,7 +26,7 @@ func TestCompressLZWOrderLSBLitWidth8(t *testing.T) {
 
 	compressedPix, err := codec.CompressLZWOrderLSBLitWidth8(imgRGBA.Pix)
 	assert.Nil(t, err)
-	assert.Equal(t, 4096, len(compressedPix))
+	assert.Equal(t, 7155, len(compressedPix))
 }
 
 func TestDecompressLZWOrderLSBLitWidth8(t *testing.T) {
@@ -39,7 +39,7 @@ func TestDecompressLZWOrderLSBLitWidth8(t *testing.T) {
 
 	compressedPix, err := codec.CompressLZWOrderLSBLitWidth8(imgRGBA.Pix)
 	assert.Nil(t, err)
-	assert.Equal(t, 4096, len(compressedPix))
+	assert.Equal(t, 7155, len(compressedPix))
 
 	decompressedPix, err := codec.DecompressLZWOrderLSBLitWidth8(compressedPix,
 		imgRGBA.Rect.Dx()*imgRGBA.Rect.Dy()*4)

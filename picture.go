@@ -1,11 +1,16 @@
 package codec
 
 import (
+	"encoding/hex"
+	"fmt"
 	"image"
 	"image/draw"
 	_ "image/jpeg"
 	_ "image/png"
 )
+
+// TODO: add the CBOR serialization
+// to save pictures to .res files.
 
 type Picture struct {
 	Width         int32
@@ -19,6 +24,7 @@ type Picture struct {
 type CompressedPicture struct {
 	Width                 int32
 	Height                int32
+	OriginalPixSize       int32
 	CompressedPix         []byte
 	OriginalHash          []byte
 	OriginalPixFormat     PixFormat
@@ -36,11 +42,52 @@ func (picture *Picture) Compress() (*CompressedPicture, error) {
 	return &CompressedPicture{
 		Width:                 picture.Width,
 		Height:                picture.Height,
+		OriginalPixSize:       int32(len(picture.Pix)),
 		CompressedPix:         compressedPix,
 		OriginalHash:          picture.Hash,
 		OriginalPixFormat:     picture.PixFormat,
 		OriginalHashAlgorithm: picture.HashAlgorithm,
 		CompressionAlgorithm:  ConsentedCompressionAlgorithm,
+	}, nil
+}
+
+func (compressedPicture *CompressedPicture) Decompress() (*Picture, error) {
+	previousCompressionAlgorithm := ConsentedCompressionAlgorithm
+	defer func() { ConsentedCompressionAlgorithm = previousCompressionAlgorithm }()
+	ConsentedCompressionAlgorithm = compressedPicture.CompressionAlgorithm
+
+	previousHashAlgorithm := ConsentedHashAlgorithm
+	defer func() { ConsentedHashAlgorithm = previousHashAlgorithm }()
+	ConsentedHashAlgorithm = compressedPicture.OriginalHashAlgorithm
+
+	decompressedPix, err := Decompress(compressedPicture.CompressedPix,
+		int(compressedPicture.OriginalPixSize))
+
+	if err != nil {
+		return nil, err
+	}
+
+	decompressedHash, err := Hash(decompressedPix)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !SliceEqual(decompressedHash, compressedPicture.OriginalHash) {
+		return nil, fmt.Errorf(
+			"data corruption error: expected %s but got %s (%s)",
+			hex.EncodeToString(compressedPicture.OriginalHash),
+			hex.EncodeToString(decompressedHash),
+			compressedPicture.OriginalHashAlgorithm)
+	}
+
+	return &Picture{
+		Width:         compressedPicture.Width,
+		Height:        compressedPicture.Height,
+		Pix:           decompressedPix,
+		Hash:          decompressedHash,
+		PixFormat:     compressedPicture.OriginalPixFormat,
+		HashAlgorithm: compressedPicture.OriginalHashAlgorithm,
 	}, nil
 }
 

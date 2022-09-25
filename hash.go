@@ -9,8 +9,8 @@ import (
 
 var (
 	hash = map[HashAlgorithm]func([]byte) ([]byte, error){
-		HashAlgorithmKeccak256: Keccak256,
-		HashAlgorithmSHA256:    SHA256,
+		HashAlgorithmKeccak256: HashKeccak256,
+		HashAlgorithmSHA256:    HashSHA256,
 	}
 )
 
@@ -26,7 +26,7 @@ func Hash(in []byte) ([]byte, error) {
 	return hashAlgorithm(in)
 }
 
-func Keccak256(in []byte) ([]byte, error) {
+func HashKeccak256(in []byte) ([]byte, error) {
 	hash := crypto.NewKeccakState()
 	total := 0
 	var written int
@@ -45,7 +45,7 @@ func Keccak256(in []byte) ([]byte, error) {
 	return sum, nil
 }
 
-func SHA256(in []byte) ([]byte, error) {
+func HashSHA256(in []byte) ([]byte, error) {
 	sum := sha256.Sum256(in)
 
 	return sum[:], nil

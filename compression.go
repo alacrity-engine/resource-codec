@@ -27,7 +27,6 @@ func Compress(in []byte) ([]byte, error) {
 func CompressLZWOrderLSBLitWidth8(in []byte) ([]byte, error) {
 	var buffer bytes.Buffer
 	writer := lzw.NewWriter(&buffer, lzw.LSB, 8)
-	defer writer.Close()
 	total := 0
 	var written int
 	var err error
@@ -35,6 +34,14 @@ func CompressLZWOrderLSBLitWidth8(in []byte) ([]byte, error) {
 	for written, err = writer.Write(in[total:]); written > 0 && err == nil; written, err = writer.Write(in[total:]) {
 		total += written
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// It seems it's not okay to
+	// defer the Close() call here.
+	err = writer.Close()
 
 	if err != nil {
 		return nil, err
