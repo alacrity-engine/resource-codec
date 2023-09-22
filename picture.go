@@ -13,7 +13,7 @@ import (
 	"github.com/alacrity-engine/core/geometry"
 )
 
-type Picture struct {
+type PictureData struct {
 	Width         int32
 	Height        int32
 	Pix           []byte
@@ -22,7 +22,7 @@ type Picture struct {
 	HashAlgorithm HashAlgorithm
 }
 
-type CompressedPicture struct {
+type CompressedPictureData struct {
 	Width                 int32
 	Height                int32
 	OriginalPixSize       int32
@@ -35,7 +35,7 @@ type CompressedPicture struct {
 
 // GetSpritesheetFrames returns the set of rectangles
 // corresponding to the frames of the spritesheet.
-func (spritesheet *Picture) GetSpritesheetFrames(width, height int) []geometry.Rect {
+func (spritesheet *PictureData) GetSpritesheetFrames(width, height int) []geometry.Rect {
 	frames := make([]geometry.Rect, 0)
 	pixelWidth := float64(spritesheet.Width)
 	pixelHeight := float64(spritesheet.Height)
@@ -52,14 +52,14 @@ func (spritesheet *Picture) GetSpritesheetFrames(width, height int) []geometry.R
 	return frames
 }
 
-func (picture *Picture) Compress() (*CompressedPicture, error) {
+func (picture *PictureData) Compress() (*CompressedPictureData, error) {
 	compressedPix, err := Compress(picture.Pix)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &CompressedPicture{
+	return &CompressedPictureData{
 		Width:                 picture.Width,
 		Height:                picture.Height,
 		OriginalPixSize:       int32(len(picture.Pix)),
@@ -71,7 +71,7 @@ func (picture *Picture) Compress() (*CompressedPicture, error) {
 	}, nil
 }
 
-func (compressedPicture *CompressedPicture) Decompress() (*Picture, error) {
+func (compressedPicture *CompressedPictureData) Decompress() (*PictureData, error) {
 	previousCompressionAlgorithm := ConsentedCompressionAlgorithm
 	defer func() { ConsentedCompressionAlgorithm = previousCompressionAlgorithm }()
 	ConsentedCompressionAlgorithm = compressedPicture.CompressionAlgorithm
@@ -101,7 +101,7 @@ func (compressedPicture *CompressedPicture) Decompress() (*Picture, error) {
 			compressedPicture.OriginalHashAlgorithm)
 	}
 
-	return &Picture{
+	return &PictureData{
 		Width:         compressedPicture.Width,
 		Height:        compressedPicture.Height,
 		Pix:           decompressedPix,
@@ -111,7 +111,7 @@ func (compressedPicture *CompressedPicture) Decompress() (*Picture, error) {
 	}, nil
 }
 
-func (compressedPicture *CompressedPicture) ToBytes() ([]byte, error) {
+func (compressedPicture *CompressedPictureData) ToBytes() ([]byte, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
 	err := binary.Write(buffer, binary.BigEndian, compressedPicture.Width)
@@ -177,9 +177,9 @@ func (compressedPicture *CompressedPicture) ToBytes() ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func CompressedPictureFromBytes(data []byte) (*CompressedPicture, error) {
+func CompressedPictureFromBytes(data []byte) (*CompressedPictureData, error) {
 	buffer := bytes.NewBuffer(data)
-	compressedPicture := &CompressedPicture{}
+	compressedPicture := &CompressedPictureData{}
 
 	err := binary.Read(buffer, binary.BigEndian, &compressedPicture.Width)
 
@@ -261,7 +261,7 @@ func CompressedPictureFromBytes(data []byte) (*CompressedPicture, error) {
 	return compressedPicture, nil
 }
 
-func NewPictureFromImage(img image.Image) (*Picture, error) {
+func NewPictureFromImage(img image.Image) (*PictureData, error) {
 	imgRGBA := image.NewRGBA(image.Rect(0, 0,
 		img.Bounds().Dx(), img.Bounds().Dy()))
 	draw.Draw(imgRGBA, imgRGBA.Bounds(),
@@ -275,7 +275,7 @@ func NewPictureFromImage(img image.Image) (*Picture, error) {
 		return nil, err
 	}
 
-	return &Picture{
+	return &PictureData{
 		Width:         int32(imgRGBA.Bounds().Dx()),
 		Height:        int32(imgRGBA.Bounds().Dy()),
 		Pix:           imgRGBA.Pix,
