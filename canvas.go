@@ -61,6 +61,8 @@ func CanvasDataFromBytes(data []byte) (*CanvasData, error) {
 		return nil, err
 	}
 
+	cdata.Name = string(nameData)
+
 	err = binary.Read(buffer, binary.BigEndian, &cdata.DrawZ)
 
 	if err != nil {
