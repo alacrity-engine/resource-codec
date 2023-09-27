@@ -6,6 +6,7 @@ import (
 )
 
 type TextureData struct {
+	Name      string
 	PictureID string
 	Filtering uint32
 }
@@ -13,13 +14,31 @@ type TextureData struct {
 func (tdata *TextureData) ToBytes() ([]byte, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
-	err := binary.Write(buffer, binary.BigEndian, len(tdata.PictureID))
+	err := binary.Write(buffer, binary.BigEndian, len(tdata.Name))
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buffer.Write([]byte(tdata.Name))
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, len(tdata.PictureID))
 
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = buffer.Write([]byte(tdata.PictureID))
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, tdata.Filtering)
 
 	if err != nil {
 		return nil, err
@@ -34,6 +53,21 @@ func TextureDataFromBytes(data []byte) (*TextureData, error) {
 
 	var length int
 	err := binary.Read(buffer, binary.BigEndian, &length)
+
+	if err != nil {
+		return nil, err
+	}
+
+	nameData := make([]byte, length)
+	_, err = buffer.Read(nameData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	tdata.Name = string(nameData)
+
+	err = binary.Read(buffer, binary.BigEndian, &length)
 
 	if err != nil {
 		return nil, err
