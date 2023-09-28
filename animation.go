@@ -10,11 +10,11 @@ import (
 // AnimationData contains data
 // about animation frames, their
 // durations and the name of the
-// spritesheet.
+// texture.
 type AnimationData struct {
-	Spritesheet string
-	Frames      []geometry.Rect
-	Durations   []int32
+	TextureID string
+	Frames    []geometry.Rect
+	Durations []int32
 }
 
 // AnimationDataToBytes converts the animation data
@@ -22,14 +22,14 @@ type AnimationData struct {
 func (anim *AnimationData) ToBytes() ([]byte, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
-	// Write the name of the spritesheet.
-	err := binary.Write(buffer, binary.BigEndian, int32(len(anim.Spritesheet)))
+	// Write the name of the texture.
+	err := binary.Write(buffer, binary.BigEndian, int32(len(anim.TextureID)))
 
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = buffer.WriteString(anim.Spritesheet)
+	_, err = buffer.WriteString(anim.TextureID)
 
 	if err != nil {
 		return nil, err
@@ -159,8 +159,8 @@ func AnimationDataFromBytes(data []byte) (*AnimationData, error) {
 	}
 
 	return &AnimationData{
-		Spritesheet: spritesheetName,
-		Frames:      frames,
-		Durations:   durations,
+		TextureID: spritesheetName,
+		Frames:    frames,
+		Durations: durations,
 	}, nil
 }

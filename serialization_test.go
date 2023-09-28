@@ -44,7 +44,7 @@ func TestDeserializePicture(t *testing.T) {
 
 func TestSerializeAnimationData(t *testing.T) {
 	animData := &codec.AnimationData{
-		Spritesheet: "cirno-player",
+		TextureID: "cirno-player",
 		Frames: []geometry.Rect{
 			geometry.R(0, 0, 32, 32),
 			geometry.R(32, 0, 64, 32),
@@ -59,7 +59,7 @@ func TestSerializeAnimationData(t *testing.T) {
 
 func TestDeserializeAnimationData(t *testing.T) {
 	animData := &codec.AnimationData{
-		Spritesheet: "cirno-player",
+		TextureID: "cirno-player",
 		Frames: []geometry.Rect{
 			geometry.R(0, 0, 32, 32),
 			geometry.R(32, 0, 64, 32),
@@ -73,7 +73,7 @@ func TestDeserializeAnimationData(t *testing.T) {
 
 	restoredAnimData, err := codec.AnimationDataFromBytes(data)
 	assert.Nil(t, err)
-	assert.Equal(t, animData.Spritesheet, restoredAnimData.Spritesheet)
+	assert.Equal(t, animData.TextureID, restoredAnimData.TextureID)
 	assert.ElementsMatch(t, animData.Frames, restoredAnimData.Frames)
 	assert.ElementsMatch(t, animData.Durations, restoredAnimData.Durations)
 }
