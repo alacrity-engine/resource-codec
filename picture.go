@@ -52,6 +52,25 @@ func (spritesheet *PictureData) GetSpritesheetFrames(width, height int) []geomet
 	return frames
 }
 
+// GetSpritesheetFrames returns the set of rectangles
+// corresponding to the frames of the spritesheet.
+func (spritesheet *CompressedPictureData) GetSpritesheetFrames(width, height int) []geometry.Rect {
+	frames := make([]geometry.Rect, 0)
+	pixelWidth := float64(spritesheet.Width)
+	pixelHeight := float64(spritesheet.Height)
+	dw := pixelWidth / float64(width)
+	dh := pixelHeight / float64(height)
+
+	for y := pixelHeight; y > 0; y -= dh {
+		for x := 0.0; x < pixelWidth; x += dw {
+			frame := geometry.R(x, y-dh, x+dw, y)
+			frames = append(frames, frame)
+		}
+	}
+
+	return frames
+}
+
 func (picture *PictureData) Compress() (*CompressedPictureData, error) {
 	compressedPix, err := Compress(picture.Pix)
 
