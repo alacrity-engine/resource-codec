@@ -12,9 +12,10 @@ import (
 // durations and the name of the
 // texture.
 type AnimationData struct {
-	TextureID string
-	Frames    []geometry.Rect
-	Durations []int32
+	SpritesheetID string
+	TextureID     string
+	Frames        []geometry.Rect
+	Durations     []int32
 }
 
 // AnimationDataToBytes converts the animation data
@@ -22,8 +23,21 @@ type AnimationData struct {
 func (anim *AnimationData) ToBytes() ([]byte, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
+	// Write the name of the spritesheet.
+	err := binary.Write(buffer, binary.BigEndian, int32(len(anim.SpritesheetID)))
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buffer.WriteString(anim.SpritesheetID)
+
+	if err != nil {
+		return nil, err
+	}
+
 	// Write the name of the texture.
-	err := binary.Write(buffer, binary.BigEndian, int32(len(anim.TextureID)))
+	err = binary.Write(buffer, binary.BigEndian, int32(len(anim.TextureID)))
 
 	if err != nil {
 		return nil, err
@@ -102,6 +116,22 @@ func AnimationDataFromBytes(data []byte) (*AnimationData, error) {
 
 	spritesheetName := string(nameBytes)
 
+	// Read the name of the texture.
+	err = binary.Read(buffer, binary.BigEndian, &nameLength)
+
+	if err != nil {
+		return nil, err
+	}
+
+	nameBytes = make([]byte, nameLength)
+	_, err = buffer.Read(nameBytes)
+
+	if err != nil {
+		return nil, err
+	}
+
+	textureName := string(nameBytes)
+
 	// Read the number of frames.
 	var frameCount int32
 	err = binary.Read(buffer, binary.BigEndian, &frameCount)
@@ -159,8 +189,9 @@ func AnimationDataFromBytes(data []byte) (*AnimationData, error) {
 	}
 
 	return &AnimationData{
-		TextureID: spritesheetName,
-		Frames:    frames,
-		Durations: durations,
+		SpritesheetID: spritesheetName,
+		TextureID:     textureName,
+		Frames:        frames,
+		Durations:     durations,
 	}, nil
 }
