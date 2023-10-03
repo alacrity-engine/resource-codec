@@ -37,7 +37,9 @@ type ComponentData struct {
 type SpriteData struct {
 	ColorMask       []float32
 	TargetArea      geometry.Rect
-	DrawMode        uint32
+	VertexDrawMode  uint32
+	TextureDrawMode uint32
+	ColorDrawMode   uint32
 	ShaderProgramID string
 	TextureID       string
 	CanvasID        string
