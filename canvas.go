@@ -3,14 +3,11 @@ package codec
 import (
 	"bytes"
 	"encoding/binary"
-
-	"github.com/go-gl/mathgl/mgl32"
 )
 
 type CanvasData struct {
-	Name       string
-	DrawZ      int
-	Projection mgl32.Mat4
+	Name  string
+	DrawZ int
 }
 
 func (cdata *CanvasData) ToBytes() ([]byte, error) {
@@ -29,12 +26,6 @@ func (cdata *CanvasData) ToBytes() ([]byte, error) {
 	}
 
 	err = binary.Write(buffer, binary.BigEndian, cdata.DrawZ)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = binary.Write(buffer, binary.BigEndian, cdata.Projection)
 
 	if err != nil {
 		return nil, err
@@ -64,12 +55,6 @@ func CanvasDataFromBytes(data []byte) (*CanvasData, error) {
 	cdata.Name = string(nameData)
 
 	err = binary.Read(buffer, binary.BigEndian, &cdata.DrawZ)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = binary.Read(buffer, binary.BigEndian, &cdata.Projection)
 
 	if err != nil {
 		return nil, err
