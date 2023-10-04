@@ -10,7 +10,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
-	"github.com/alacrity-engine/core/geometry"
+	"github.com/alacrity-engine/core/math/geometry"
 )
 
 type PictureData struct {

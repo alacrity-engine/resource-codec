@@ -5,7 +5,7 @@ import (
 	"image"
 	"testing"
 
-	"github.com/alacrity-engine/core/geometry"
+	"github.com/alacrity-engine/core/math/geometry"
 	codec "github.com/alacrity-engine/resource-codec"
 	"github.com/stretchr/testify/assert"
 )
