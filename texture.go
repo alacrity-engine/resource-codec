@@ -13,7 +13,7 @@ type TextureData struct {
 func (tdata *TextureData) ToBytes() ([]byte, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
-	err := binary.Write(buffer, binary.BigEndian, len(tdata.PictureID))
+	err := binary.Write(buffer, binary.BigEndian, int32(len(tdata.PictureID)))
 
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func TextureDataFromBytes(data []byte) (*TextureData, error) {
 	buffer := bytes.NewBuffer(data)
 	tdata := &TextureData{}
 
-	var length int
+	var length int32
 	err := binary.Read(buffer, binary.BigEndian, &length)
 
 	if err != nil {
