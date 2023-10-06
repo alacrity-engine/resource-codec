@@ -13,7 +13,7 @@ type CanvasData struct {
 func (cdata *CanvasData) ToBytes() ([]byte, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
-	err := binary.Write(buffer, binary.BigEndian, len(cdata.Name))
+	err := binary.Write(buffer, binary.BigEndian, int32(len(cdata.Name)))
 
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func CanvasDataFromBytes(data []byte) (*CanvasData, error) {
 	buffer := bytes.NewBuffer(data)
 	cdata := &CanvasData{}
 
-	var length int
+	var length int32
 	err := binary.Read(buffer, binary.BigEndian, &length)
 
 	if err != nil {
