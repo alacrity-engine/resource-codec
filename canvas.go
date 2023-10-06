@@ -7,7 +7,7 @@ import (
 
 type CanvasData struct {
 	Name  string
-	DrawZ int
+	DrawZ int32
 }
 
 func (cdata *CanvasData) ToBytes() ([]byte, error) {
