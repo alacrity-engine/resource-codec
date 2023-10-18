@@ -8,8 +8,14 @@ import (
 )
 
 type AtlasData struct {
-	Frames    map[rune]geometry.Rect
+	Glyphs    map[rune]GlyphData
 	SymbolSet *PictureData
+}
+
+type GlyphData struct {
+	Dot     geometry.Vec
+	Frame   geometry.Rect
+	Advance float64
 }
 
 type CompressedFrames struct {
@@ -23,35 +29,53 @@ type CompressedAtlasData struct {
 	CompressedSymbolSet  *CompressedPictureData
 }
 
-func framesDictToBytes(frames map[rune]geometry.Rect) ([]byte, error) {
+func glyphsDictToBytes(glyphs map[rune]GlyphData) ([]byte, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
-	for symbol, rect := range frames {
+	for symbol, glyph := range glyphs {
 		err := binary.Write(buffer, binary.BigEndian, symbol)
 
 		if err != nil {
 			return nil, err
 		}
 
-		err = binary.Write(buffer, binary.BigEndian, rect.Min.X)
+		err = binary.Write(buffer, binary.BigEndian, glyph.Dot.X)
 
 		if err != nil {
 			return nil, err
 		}
 
-		err = binary.Write(buffer, binary.BigEndian, rect.Min.Y)
+		err = binary.Write(buffer, binary.BigEndian, glyph.Dot.Y)
 
 		if err != nil {
 			return nil, err
 		}
 
-		err = binary.Write(buffer, binary.BigEndian, rect.Max.X)
+		err = binary.Write(buffer, binary.BigEndian, glyph.Frame.Min.X)
 
 		if err != nil {
 			return nil, err
 		}
 
-		err = binary.Write(buffer, binary.BigEndian, rect.Max.Y)
+		err = binary.Write(buffer, binary.BigEndian, glyph.Frame.Min.Y)
+
+		if err != nil {
+			return nil, err
+		}
+
+		err = binary.Write(buffer, binary.BigEndian, glyph.Frame.Max.X)
+
+		if err != nil {
+			return nil, err
+		}
+
+		err = binary.Write(buffer, binary.BigEndian, glyph.Frame.Max.Y)
+
+		if err != nil {
+			return nil, err
+		}
+
+		err = binary.Write(buffer, binary.BigEndian, glyph.Advance)
 
 		if err != nil {
 			return nil, err
@@ -61,8 +85,8 @@ func framesDictToBytes(frames map[rune]geometry.Rect) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func framesDictFromBytes(data []byte, frameCount int32) (map[rune]geometry.Rect, error) {
-	frames := make(map[rune]geometry.Rect, frameCount)
+func glyphsDictFromBytes(data []byte, frameCount int32) (map[rune]GlyphData, error) {
+	frames := make(map[rune]GlyphData, frameCount)
 	buffer := bytes.NewBuffer(data)
 
 	for i := 0; i < int(frameCount); i++ {
@@ -74,40 +98,66 @@ func framesDictFromBytes(data []byte, frameCount int32) (map[rune]geometry.Rect,
 			return nil, err
 		}
 
-		var rect geometry.Rect
+		var dot geometry.Vec
 
-		err = binary.Read(buffer, binary.BigEndian, &rect.Min.X)
-
-		if err != nil {
-			return nil, err
-		}
-
-		err = binary.Read(buffer, binary.BigEndian, &rect.Min.Y)
+		err = binary.Read(buffer, binary.BigEndian, &dot.X)
 
 		if err != nil {
 			return nil, err
 		}
 
-		err = binary.Read(buffer, binary.BigEndian, &rect.Max.X)
+		err = binary.Read(buffer, binary.BigEndian, &dot.Y)
 
 		if err != nil {
 			return nil, err
 		}
 
-		err = binary.Read(buffer, binary.BigEndian, &rect.Max.Y)
+		var frame geometry.Rect
+
+		err = binary.Read(buffer, binary.BigEndian, &frame.Min.X)
 
 		if err != nil {
 			return nil, err
 		}
 
-		frames[symbol] = rect
+		err = binary.Read(buffer, binary.BigEndian, &frame.Min.Y)
+
+		if err != nil {
+			return nil, err
+		}
+
+		err = binary.Read(buffer, binary.BigEndian, &frame.Max.X)
+
+		if err != nil {
+			return nil, err
+		}
+
+		err = binary.Read(buffer, binary.BigEndian, &frame.Max.Y)
+
+		if err != nil {
+			return nil, err
+		}
+
+		var advance float64
+
+		err = binary.Read(buffer, binary.BigEndian, &advance)
+
+		if err != nil {
+			return nil, err
+		}
+
+		frames[symbol] = GlyphData{
+			Dot:     dot,
+			Frame:   frame,
+			Advance: advance,
+		}
 	}
 
 	return frames, nil
 }
 
 func (ad *AtlasData) Compress() (*CompressedAtlasData, error) {
-	framesData, err := framesDictToBytes(ad.Frames)
+	framesData, err := glyphsDictToBytes(ad.Glyphs)
 
 	if err != nil {
 		return nil, err
@@ -120,7 +170,7 @@ func (ad *AtlasData) Compress() (*CompressedAtlasData, error) {
 	}
 
 	compressedFrames := &CompressedFrames{
-		FrameCount:     int32(len(ad.Frames)),
+		FrameCount:     int32(len(ad.Glyphs)),
 		OrigDataLength: int32(len(framesData)),
 		Data:           compressedFramesData,
 	}
@@ -146,7 +196,7 @@ func (cad *CompressedAtlasData) Decompress() (*AtlasData, error) {
 		return nil, err
 	}
 
-	frames, err := framesDictFromBytes(framesData,
+	frames, err := glyphsDictFromBytes(framesData,
 		cad.CompressedFramesData.FrameCount)
 
 	if err != nil {
@@ -160,7 +210,7 @@ func (cad *CompressedAtlasData) Decompress() (*AtlasData, error) {
 	}
 
 	return &AtlasData{
-		Frames:    frames,
+		Glyphs:    frames,
 		SymbolSet: picture,
 	}, nil
 }
