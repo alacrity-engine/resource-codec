@@ -6,6 +6,7 @@ func init() {
 	gob.Register(GameObjectPointerData{})
 	gob.Register(ComponentPointerData{})
 	gob.Register(ResourcePointerData{})
+	gob.Register(BatchPointerData{})
 }
 
 type GameObjectPointerData struct {
@@ -20,4 +21,9 @@ type ComponentPointerData struct {
 type ResourcePointerData struct {
 	ResourceType string
 	ResourceID   string
+}
+
+type BatchPointerData struct {
+	CanvasID string
+	BatchID  string
 }
