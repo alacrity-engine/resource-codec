@@ -8,6 +8,18 @@ import (
 type SpritesheetData struct {
 	Width  int32
 	Height int32
+	Orig   OrigData
+	Area   AreaData
+}
+
+type OrigData struct {
+	X int32
+	Y int32
+}
+
+type AreaData struct {
+	PixelWidth  int32
+	PixelHeight int32
 }
 
 func (ssdata *SpritesheetData) ToBytes() ([]byte, error) {
@@ -20,6 +32,30 @@ func (ssdata *SpritesheetData) ToBytes() ([]byte, error) {
 	}
 
 	err = binary.Write(buffer, binary.BigEndian, ssdata.Height)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, ssdata.Orig.X)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, ssdata.Orig.Y)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, ssdata.Area.PixelWidth)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, ssdata.Area.PixelHeight)
 
 	if err != nil {
 		return nil, err
@@ -39,6 +75,30 @@ func SpritesheetDataFromBytes(data []byte) (*SpritesheetData, error) {
 	}
 
 	err = binary.Read(buffer, binary.BigEndian, &ssdata.Height)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Read(buffer, binary.BigEndian, &ssdata.Orig.X)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Read(buffer, binary.BigEndian, &ssdata.Orig.Y)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Read(buffer, binary.BigEndian, &ssdata.Area.PixelWidth)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Read(buffer, binary.BigEndian, &ssdata.Area.PixelHeight)
 
 	if err != nil {
 		return nil, err
