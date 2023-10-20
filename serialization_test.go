@@ -54,7 +54,7 @@ func TestSerializeAnimationData(t *testing.T) {
 
 	data, err := animData.ToBytes()
 	assert.Nil(t, err)
-	assert.Equal(t, 92, len(data))
+	assert.Equal(t, 96, len(data))
 }
 
 func TestDeserializeAnimationData(t *testing.T) {
@@ -69,7 +69,7 @@ func TestDeserializeAnimationData(t *testing.T) {
 
 	data, err := animData.ToBytes()
 	assert.Nil(t, err)
-	assert.Equal(t, 92, len(data))
+	assert.Equal(t, 96, len(data))
 
 	restoredAnimData, err := codec.AnimationDataFromBytes(data)
 	assert.Nil(t, err)

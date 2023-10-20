@@ -35,40 +35,62 @@ type CompressedPictureData struct {
 
 // GetSpritesheetFrames returns the set of rectangles
 // corresponding to the frames of the spritesheet.
-func (spritesheet *PictureData) GetSpritesheetFrames(width, height int) []geometry.Rect {
-	frames := make([]geometry.Rect, 0)
-	pixelWidth := float64(spritesheet.Width)
-	pixelHeight := float64(spritesheet.Height)
-	dw := pixelWidth / float64(width)
-	dh := pixelHeight / float64(height)
+func (pic *PictureData) GetSpritesheetFrames(ss *SpritesheetData) ([]geometry.Rect, error) {
+	orig := OrigData{
+		X: ss.Orig.X,
+		Y: ss.Orig.Y + ss.Area.PixelHeight,
+	}
 
-	for y := pixelHeight; y > 0; y -= dh {
-		for x := 0.0; x < pixelWidth; x += dw {
+	if orig.X+ss.Area.PixelWidth > pic.Width ||
+		orig.Y-ss.Area.PixelHeight < 0 {
+		return nil, fmt.Errorf(
+			"the spritesheet cannot be applied to the picture")
+	}
+
+	frames := make([]geometry.Rect, 0)
+	pixelWidth := float64(ss.Area.PixelWidth)
+	pixelHeight := float64(ss.Area.PixelHeight)
+	dw := pixelWidth / float64(ss.Width)
+	dh := pixelHeight / float64(ss.Height)
+
+	for y := float64(orig.Y); y > float64(ss.Orig.Y); y -= dh {
+		for x := float64(orig.X); x < float64(orig.X)+pixelWidth; x += dw {
 			frame := geometry.R(x, y-dh, x+dw, y)
 			frames = append(frames, frame)
 		}
 	}
 
-	return frames
+	return frames, nil
 }
 
 // GetSpritesheetFrames returns the set of rectangles
 // corresponding to the frames of the spritesheet.
-func (spritesheet *CompressedPictureData) GetSpritesheetFrames(width, height int) []geometry.Rect {
-	frames := make([]geometry.Rect, 0)
-	pixelWidth := float64(spritesheet.Width)
-	pixelHeight := float64(spritesheet.Height)
-	dw := pixelWidth / float64(width)
-	dh := pixelHeight / float64(height)
+func (cpic *CompressedPictureData) GetSpritesheetFrames(ss *SpritesheetData) ([]geometry.Rect, error) {
+	orig := OrigData{
+		X: ss.Orig.X,
+		Y: ss.Orig.Y + ss.Area.PixelHeight,
+	}
 
-	for y := pixelHeight; y > 0; y -= dh {
-		for x := 0.0; x < pixelWidth; x += dw {
+	if orig.X+ss.Area.PixelWidth > cpic.Width ||
+		orig.Y-ss.Area.PixelHeight < 0 {
+		return nil, fmt.Errorf(
+			"the spritesheet cannot be applied to the picture")
+	}
+
+	frames := make([]geometry.Rect, 0)
+	pixelWidth := float64(ss.Area.PixelWidth)
+	pixelHeight := float64(ss.Area.PixelHeight)
+	dw := pixelWidth / float64(ss.Width)
+	dh := pixelHeight / float64(ss.Height)
+
+	for y := float64(orig.Y); y > float64(ss.Orig.Y); y -= dh {
+		for x := float64(orig.X); x < float64(orig.X)+pixelWidth; x += dw {
 			frame := geometry.R(x, y-dh, x+dw, y)
 			frames = append(frames, frame)
 		}
 	}
 
-	return frames
+	return frames, nil
 }
 
 func (picture *PictureData) Compress() (*CompressedPictureData, error) {
