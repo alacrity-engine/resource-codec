@@ -10,6 +10,9 @@ import (
 type AtlasData struct {
 	Glyphs    map[rune]GlyphData
 	SymbolSet *PictureData
+	Size      int32
+	MaxHeight float64
+	FontName  string
 }
 
 type GlyphData struct {
@@ -27,6 +30,9 @@ type CompressedFrames struct {
 type CompressedAtlasData struct {
 	CompressedFramesData *CompressedFrames
 	CompressedSymbolSet  *CompressedPictureData
+	Size                 int32
+	MaxHeight            float64
+	FontName             string
 }
 
 func glyphsDictToBytes(glyphs map[rune]GlyphData) ([]byte, error) {
@@ -184,6 +190,9 @@ func (ad *AtlasData) Compress() (*CompressedAtlasData, error) {
 	return &CompressedAtlasData{
 		CompressedFramesData: compressedFrames,
 		CompressedSymbolSet:  compressedSymbolSet,
+		Size:                 ad.Size,
+		MaxHeight:            ad.MaxHeight,
+		FontName:             ad.FontName,
 	}, nil
 }
 
@@ -319,6 +328,31 @@ func (cad *CompressedAtlasData) ToBytes() ([]byte, error) {
 		return nil, err
 	}
 
+	// Write everything else.
+	err = binary.Write(buffer, binary.BigEndian, cad.Size)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, cad.MaxHeight)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, int32(len(cad.FontName)))
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buffer.WriteString(cad.FontName)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return buffer.Bytes(), nil
 }
 
@@ -366,6 +400,35 @@ func CompressedAtlasDataFromBytes(data []byte) (*CompressedAtlasData, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Read everything else.
+	err = binary.Read(buffer, binary.BigEndian, &cad.Size)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Read(buffer, binary.BigEndian, &cad.MaxHeight)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Read(buffer, binary.BigEndian, &length)
+
+	if err != nil {
+		return nil, err
+	}
+
+	fieldData = make([]byte, length)
+	_, err = buffer.Read(fieldData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	fontName := string(fieldData)
+	cad.FontName = fontName
 
 	return cad, nil
 }
